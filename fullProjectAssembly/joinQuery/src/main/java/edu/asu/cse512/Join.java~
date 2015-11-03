@@ -16,7 +16,6 @@ public class Join
 	*/
     public static void main( String[] args )
     {
-        // adding skelton
         //Initialize, need to remove existing in output file location.
     	
     	//Implement 
