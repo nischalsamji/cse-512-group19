@@ -4,6 +4,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.broadcast.Broadcast;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -22,7 +23,8 @@ public class Join
 	 * @param inputType 
 	 * 
 	*/
-    public static void main( String[] args )
+    @SuppressWarnings("serial")
+	public static void main( String[] args )
     {
         System.out.println("hello");
  
@@ -44,9 +46,11 @@ public class Join
     	
     	
     	//new Funtion(inputType, returnType)
-    	JavaRDD<Geometry> input2Polygons = input2RDD.map(new Function<String,Geometry>(){
-    		public Geometry call(String coOrdinates){  Geometry g = getGeometry(coOrdinates); 
-    		return g;}
+    	JavaRDD<Id_Polygon> input2Polygons = input2RDD.map(new Function<String,Id_Polygon>(){
+			private static final long serialVersionUID = 1L;
+
+			public Id_Polygon call(String coOrdinates){  Id_Polygon idp = getGeometry(coOrdinates); 
+    		return idp;}
     	});
     		
     	
@@ -57,32 +61,51 @@ public class Join
     		
     	}
     	else if(inputType.equals("rectangle")){
-    		JavaRDD<Geometry> input1Polygons = input1RDD.map(new Function<String,Geometry>(){
-        		public Geometry call(String coOrdinates){  Geometry g = getGeometry(coOrdinates); 
-        		return g;}
+    		JavaRDD<List<String>> output;
+    		JavaRDD<Id_Polygon> input1Polygons = input1RDD.map(new Function<String,Id_Polygon>(){
+    			
+				private static final long serialVersionUID = 1L;
+				public Id_Polygon call(String coOrdinates){  Id_Polygon idp = getGeometry(coOrdinates); 
+	    		return idp;}
         	});
     		
-    		
-    		JavaRDD<List<Double>> output = input2Polygons.Map(new Function<Geometry ,List<Double>>{
-    			public List<Double> call(Geometry onePolygon){
-    				List<Double> eachLine = new ArrayList<Double>();
+    		final Broadcast<JavaRDD<Id_Polygon>> input1Broadcast = sc.broadcast(input1Polygons);
+    		output = input2Polygons.map(new Function<Id_Polygon,List<String>>(){
+    			public List<String> call(Id_Polygon onePolygon){
+    				List<String> eachResult = new ArrayList<String>(); //glom
     				
-    				
-    				return eachLine;
+    				 JavaRDD<Id_Polygon> inputPolygons= input1Broadcast.getValue();
+    				 int tuplesInInput1 = (int)inputPolygons.count(); //have to check later 
+    					List<Id_Polygon> input1List = inputPolygons.collect(); //take() method is only returning integer number of tuples but here we need to collect Double number of records
+    					int count=0;
+    					for(int i=0; i< tuplesInInput1; i++){
+    						if(input1List.get(i).g.intersects(onePolygon.g))
+    						{
+    							if(count == 0)
+    								eachResult.add(onePolygon.id);
+    							eachResult.add(input1List.get(i).id);
+    						}
+    					}
+    				return eachResult;    				
     			}
     		});
+    		
+    		System.out.println(output.first());
+    		
+    		
     		
     	}
     
     	
+    	
     	//Output your result, you need to sort your result!!!
     	//And,Don't add a additional clean up step delete the new generated file...
-    	
+    	sc.close();
     }
     
     
     
-    public static Geometry getGeometry(String twocoOrdinates){
+    public static Id_Polygon getGeometry(String twocoOrdinates){
     	String coOrdinates[] = twocoOrdinates.split(","); 
 		double x1=Double.parseDouble(coOrdinates[1]);
 		double y1=Double.parseDouble(coOrdinates[2]);
@@ -99,8 +122,9 @@ public class Join
 		}catch(ParseException e){
 			e.printStackTrace();    				
 		}
+		Id_Polygon newRecord = new Id_Polygon(coOrdinates[0], g);
 		
-		return g;
+		return newRecord;
 
     }
 
