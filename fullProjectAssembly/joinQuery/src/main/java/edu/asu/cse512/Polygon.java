@@ -1,20 +1,18 @@
 package edu.asu.cse512;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.operation.overlay.snap.GeometrySnapper;
-import com.vividsolutions.jts.util.GeometricShapeFactory;
 
-public class Polygon {
+
+public class Polygon implements Serializable {
 	
 	/* create rectangle reference 
 	 * http://math.stackexchange.com/questions/506785/given-two-diagonally-opposite
 	 * -points-on-a-square-how-to-calculate-the-other-two */
-	
+
+	private static final long serialVersionUID = 1L;
 	private double x1;
 	private double x2;
 	private double y1;
@@ -29,21 +27,15 @@ public class Polygon {
 	private double   y4;
 	public List<Double>  CalcultePolygon(double x1,double y1,double x2,double y2){
 		this.x1=x1;this.x2=x2;this.y1=y1;this.y2=y2;
-		System.out.println("here");
 		xcentre=(x1+x2)/2;
-		System.out.println("xc"+xcentre);
 		ycentre=(y1+y2)/2;
-		System.out.println("yc"+ycentre);
 		xdia=(x1-x2)/2;
-		System.out.println("xd"+xdia);
 		ydia=(y1-y2)/2;
-		System.out.println("yd"+ydia);
 		x3=x2;
 		y3=y1;
 		x4=x1;
 		y4=y2;
 		
-		System.out.println("x"+x3+"y"+y3+"x"+x4+"y"+y4);
 		List<Double> coordinate=Arrays.asList(x3,y3,x4,y4);
 		return coordinate;
 		

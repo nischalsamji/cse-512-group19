@@ -3,18 +3,24 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
-import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.io.Serializable;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
 
-public class Join 
+public class Join implements Serializable
 {
+	
+	private static final long serialVersionUID = 1L;
+
+
+
 	/*
 	 * Main function, take two parameter as input, output
 	 * @param inputLocation 1
@@ -47,50 +53,66 @@ public class Join
     	
     	//new Funtion(inputType, returnType)
     	JavaRDD<Id_Polygon> input2Polygons = input2RDD.map(new Function<String,Id_Polygon>(){
-			private static final long serialVersionUID = 1L;
+		
 
 			public Id_Polygon call(String coOrdinates){  Id_Polygon idp = getGeometry(coOrdinates); 
     		return idp;}
     	});
     		
-    	
-    	
+    	System.out.println(input2Polygons.count());
+    	System.out.println(input2Polygons.first().id);
+    	System.out.println(input2Polygons.first().g.getCoordinate());
     	String inputType = "rectangle";//args[3];
     	
     	if(inputType.equals("point")){
-    		
+    		//if((x1-x_1) * (x1-x_2)<=0 && (y1-y_1) * (y1-y_2)<=0)
     	}
     	else if(inputType.equals("rectangle")){
-    		JavaRDD<List<String>> output;
+    		JavaRDD<String> output;
     		JavaRDD<Id_Polygon> input1Polygons = input1RDD.map(new Function<String,Id_Polygon>(){
     			
-				private static final long serialVersionUID = 1L;
+		
 				public Id_Polygon call(String coOrdinates){  Id_Polygon idp = getGeometry(coOrdinates); 
 	    		return idp;}
         	});
     		
     		final Broadcast<JavaRDD<Id_Polygon>> input1Broadcast = sc.broadcast(input1Polygons);
-    		output = input2Polygons.map(new Function<Id_Polygon,List<String>>(){
-    			public List<String> call(Id_Polygon onePolygon){
-    				List<String> eachResult = new ArrayList<String>(); //glom
-    				
+    		output = input2Polygons.map(new Function<Id_Polygon,String>(){
+    			public String call(final Id_Polygon onePolygon){
+    				String eachResult =""; //glom    				
     				 JavaRDD<Id_Polygon> inputPolygons= input1Broadcast.getValue();
-    				 int tuplesInInput1 = (int)inputPolygons.count(); //have to check later 
-    					List<Id_Polygon> input1List = inputPolygons.collect(); //take() method is only returning integer number of tuples but here we need to collect Double number of records
-    					int count=0;
-    					for(int i=0; i< tuplesInInput1; i++){
-    						if(input1List.get(i).g.intersects(onePolygon.g))
-    						{
-    							if(count == 0)
-    								eachResult.add(onePolygon.id);
-    							eachResult.add(input1List.get(i).id);
-    						}
-    					}
-    				return eachResult;    				
+    				 long tuplesInInput1 = inputPolygons.count(); //have to check later     				 
+    				 
+    				 
+    				 JavaRDD<Id_Polygon> filteredInput = inputPolygons.filter(new Function<Id_Polygon,Boolean>(){
+    					 public Boolean call(Id_Polygon input1Polygon){
+    						 if(input1Polygon.g.intersects(onePolygon.g)){ //contains
+    							 return true;
+    						 }
+    						 else
+    							 return false;    								
+    					 }
+    				 });
+    				 
+    				 JavaRDD<String> filteredMapInput = inputPolygons.map(new Function<Id_Polygon,String>(){
+    					 public String call(Id_Polygon input1Polygon){
+    						 		return input1Polygon.id;
+    					 }
+    				 });
+    				 
+    				 String result= filteredMapInput.reduce(new Function2<String,String,String>(){
+    					 public String call(String a, String b){
+    						 return a+","+b;
+    					 }
+    				 });
+    				
+    				 eachResult = eachResult+onePolygon.id+result;
+    				 return eachResult;    				
     			}
     		});
     		
-    		System.out.println(output.first());
+    		System.out.println(output.count());
+    		output.saveAsTextFile("/home/system/Desktop/joinOut.txt");
     		
     		
     		
@@ -103,7 +125,7 @@ public class Join
     	sc.close();
     }
     
-    
+	 // List<Id_Polygon> input1List = inputPolygons.collect(); //take() method is only returning integer number of tuples but here we need to collect Double number of records    
     
     public static Id_Polygon getGeometry(String twocoOrdinates){
     	String coOrdinates[] = twocoOrdinates.split(","); 

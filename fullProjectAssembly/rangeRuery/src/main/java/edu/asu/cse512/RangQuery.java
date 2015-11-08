@@ -65,13 +65,14 @@ public class RangQuery
 					Double y_2 = Double.parseDouble((windowlist).getValue().get(3));
 					if((x1-x_1) * (x1-x_2)<=0 && (x2-x_1)*(x2-x_2)<=0)
 					{
-						if((y1-y_1) * (y1-y2)<=0 && (y2-y_1) * (y2-y_2) <=0)
+						if((y1-y_1) * (y1-y_2)<=0 && (y2-y_1) * (y2-y_2) <=0)
 						{
 							return true;
 						}
 						else return false;
 					}
 					else return false;
+					
 					}
 							  
 					
