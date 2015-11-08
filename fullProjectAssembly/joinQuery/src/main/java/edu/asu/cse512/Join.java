@@ -1,14 +1,17 @@
 package edu.asu.cse512;
 import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.PairFunction;
 import org.apache.spark.api.java.function.Function2;
 import org.apache.spark.broadcast.Broadcast;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.io.Serializable;
+
+import scala.Tuple2;
 
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
@@ -31,14 +34,7 @@ public class Join implements Serializable
 	*/
     @SuppressWarnings("serial")
 	public static void main( String[] args )
-    {
-        System.out.println("hello");
- 
-        //Initialize, need to remove existing in output file location.
-    	//String outputLocation = args[2];
-    	
-    	
-    	//Implement 
+    { 
     	String input1 = "/home/system/Desktop/TestData/JoinQueryTestData1.csv";  //args[0];
     	String input2 = "/home/system/Desktop/TestData/JoinQueryTestData2.csv";  //args[1];
     	SparkConf conf = new SparkConf().setMaster("local").setAppName("My App");
@@ -51,12 +47,9 @@ public class Join implements Serializable
     	System.out.println(input2RDD.count());
     	
     	
-    	//new Funtion(inputType, returnType)
+    	//new Function(inputType, returnType)
     	JavaRDD<Id_Polygon> input2Polygons = input2RDD.map(new Function<String,Id_Polygon>(){
-		
-
-			public Id_Polygon call(String coOrdinates){  Id_Polygon idp = getGeometry(coOrdinates); 
-    		return idp;}
+			public Id_Polygon call(String coOrdinates){ return getGeometry(coOrdinates); }
     	});
     		
     	System.out.println(input2Polygons.count());
@@ -68,21 +61,16 @@ public class Join implements Serializable
     		//if((x1-x_1) * (x1-x_2)<=0 && (y1-y_1) * (y1-y_2)<=0)
     	}
     	else if(inputType.equals("rectangle")){
-    		JavaRDD<String> output;
+    		JavaPairRDD<String,String> output;
     		JavaRDD<Id_Polygon> input1Polygons = input1RDD.map(new Function<String,Id_Polygon>(){
-    			
-		
-				public Id_Polygon call(String coOrdinates){  Id_Polygon idp = getGeometry(coOrdinates); 
-	    		return idp;}
+				public Id_Polygon call(String coOrdinates){  return getGeometry(coOrdinates); }
         	});
-    		
     		final Broadcast<JavaRDD<Id_Polygon>> input1Broadcast = sc.broadcast(input1Polygons);
-    		output = input2Polygons.map(new Function<Id_Polygon,String>(){
-    			public String call(final Id_Polygon onePolygon){
-    				String eachResult =""; //glom    				
-    				 JavaRDD<Id_Polygon> inputPolygons= input1Broadcast.getValue();
-    				 long tuplesInInput1 = inputPolygons.count(); //have to check later     				 
-    				 
+    		
+    		
+    		output = input2Polygons.mapToPair(new PairFunction<Id_Polygon,String,String>(){
+    			public Tuple2<String,String> call(final Id_Polygon onePolygon){    				
+    				 JavaRDD<Id_Polygon> inputPolygons= input1Broadcast.getValue();    				      			
     				 
     				 JavaRDD<Id_Polygon> filteredInput = inputPolygons.filter(new Function<Id_Polygon,Boolean>(){
     					 public Boolean call(Id_Polygon input1Polygon){
@@ -94,35 +82,47 @@ public class Join implements Serializable
     					 }
     				 });
     				 
-    				 JavaRDD<String> filteredMapInput = inputPolygons.map(new Function<Id_Polygon,String>(){
+    				 String id=filteredInput.first().id;
+    				 System.out.println(id);
+    				 
+    				 JavaRDD<String> filteredMapInput = filteredInput.map(new Function<Id_Polygon,String>(){
     					 public String call(Id_Polygon input1Polygon){
     						 		return input1Polygon.id;
     					 }
     				 });
+    				 String id2 = filteredMapInput.first();
+    				 System.out.println(id2);
     				 
     				 String result= filteredMapInput.reduce(new Function2<String,String,String>(){
     					 public String call(String a, String b){
-    						 return a+","+b;
+    						 try{return a+","+b;}
+    						 catch(Exception e){
+    							 return null;}
     					 }
+    					 
     				 });
-    				
-    				 eachResult = eachResult+onePolygon.id+result;
-    				 return eachResult;    				
+    				    		
+    				 return new Tuple2<String,String>(onePolygon.id,result);    				
     			}
     		});
     		
-    		System.out.println(output.count());
-    		output.saveAsTextFile("/home/system/Desktop/joinOut.txt");
-    		
-    		
+       		long lenOfResult = output.count();
+       		System.out.println(lenOfResult);
+       		
+       		System.out.println("Oh My god");
+       		//need to remove existing in output file location.
+       		
+       		//need to sort result
+       		output.sortByKey();
+       		output.saveAsTextFile("/home/system/Desktop/joinOut.txt");
+       		sc.close();
     		
     	}
     
     	
     	
-    	//Output your result, you need to sort your result!!!
-    	//And,Don't add a additional clean up step delete the new generated file...
-    	sc.close();
+    	
+    	
     }
     
 	 // List<Id_Polygon> input1List = inputPolygons.collect(); //take() method is only returning integer number of tuples but here we need to collect Double number of records    
