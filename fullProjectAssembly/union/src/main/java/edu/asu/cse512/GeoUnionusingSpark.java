@@ -1,10 +1,11 @@
-package com.geospark.Geospatialoperations;
+package edu.asu.cse512;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import org.apache.spark.SparkConf;
@@ -32,12 +33,12 @@ public class GeoUnionusingSpark implements java.io.Serializable{
 		int i=0;
 		final HashMap<Integer,Geometry> mappy=new HashMap();
 		/* referred from Learning Spark-Lightening-Fast-Big-Data-Analysis */
-		SparkConf conf = new SparkConf().setMaster("local").setAppName("Grp19GeoMetricUnion");
+		SparkConf conf = new SparkConf().setAppName("Grp19-GeometricUnion");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		//BufferedReader bufferedreader = null;
 		//Polygon Rect=new Polygon();
 		//using spark 
-		JavaRDD<String> polygonip = sc.textFile("C:\\Users\\bhara\\Desktop\\geoUnion.txt");
+		JavaRDD<String> polygonip = sc.textFile("C:\\Users\\bhara\\Desktop\\geoUnion.csv");
 		System.out.println("string"+polygonip.count());
 		 JavaRDD<Geometry> input1Polygons = polygonip.map(new Function<String,Geometry>(){
 			private static final long serialVersionUID = 1L;
@@ -46,8 +47,9 @@ public class GeoUnionusingSpark implements java.io.Serializable{
     		return idp;}
     	});
 		 
-	/*Geometry finalgeo= CascadedPolygonUnion.union(input1Polygons.take((int) input1Polygons.count()));
-		WKTWriter writer=new WKTWriter();*/
+		/*Geometry finalgeo= CascadedPolygonUnion.union(input1Polygons.take((int) input1Polygons.count()));
+		 ArrayList<String> op=done(finalgeo);
+		 JavaRDD<String> out=sc.parallelize(op);*/
 		 
 		 List<Geometry> geo=input1Polygons.take((int) input1Polygons.count());
 		 
@@ -61,21 +63,23 @@ public class GeoUnionusingSpark implements java.io.Serializable{
 		 
 		 ArrayList<String> op=done(finalop);
 		 JavaRDD<String> out=sc.parallelize(op);
-		 out.saveAsTextFile("C:\\Users\\bhara\\Desktop\\geoUnion1.csv");
+		 
+
+		out.saveAsTextFile("C:\\Users\\bhara\\Desktop\\geoUnion1.csv");
 
 	}
 	public static ArrayList<String> done(Geometry g){
-		 Coordinate[] getcoord = g.getCoordinates();
+			HashMap<Double,Double> mappy=new HashMap<Double, Double>();
+			Coordinate[] getcoord = g.getCoordinates();
 			ArrayList<String> array = new ArrayList<String>();
 			for (int i = 0; i < getcoord.length - 1; i++) {
 				Coordinate coo = getcoord[i];
-				array.add(coo.x + "," + coo.y);
-				System.out.println(coo.x+","+coo.y);
-			}
+				array.add(coo.x + "," + coo.y);}
+			Collections.sort(array);
 			return array;
 		}
 	public  static Geometry calculatePoly(String lines){
-			String coordinate[]= lines.split(",");
+			String coordinate[]= lines.split("\t");
 			double x1=Double.parseDouble(coordinate[0]);
 			double y1=Double.parseDouble(coordinate[1]);
 			double x2=Double.parseDouble(coordinate[2]);
