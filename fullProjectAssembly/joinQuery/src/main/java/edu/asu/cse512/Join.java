@@ -37,9 +37,9 @@ public class Join implements Serializable
     @SuppressWarnings("serial")
 	public static void main( String[] args )
     { 
-    	String input1 = "/home/system/Desktop/TestData/JoinQueryPointInput1.csv";  //args[0];
-    	String input2 = "/home/system/Desktop/TestData/JoinQueryPointInput2.csv";  //args[1];
-    	SparkConf conf = new SparkConf().setMaster("local").setAppName("My App");
+    	String input1 = "/home/system/Desktop/TestData/JoinQueryInput3.csv";  //args[0];
+    	String input2 = "/home/system/Desktop/TestData/JoinQueryInput2.csv";  //args[1];
+    	SparkConf conf = new SparkConf().setMaster("local").setAppName("Grp19-JoinQuery");
     	final JavaSparkContext sc = new JavaSparkContext(conf);
     	
     	JavaRDD<String> input1RDD = sc.textFile(input1);
@@ -70,8 +70,8 @@ public class Join implements Serializable
     		final Broadcast<List<Id_Point>> input1Broadcast = sc.broadcast(input1Points.collect());
    		     
 		    	    		 				
-    		JavaPairRDD<Long,String> output = input2Polygons.mapToPair(new PairFunction<Id_PolygonPoints,Long,String>(){
-    			public Tuple2<Long,String> call(final Id_PolygonPoints onePolygon){    				    				
+    		JavaRDD<String> output = input2Polygons.map(new Function<Id_PolygonPoints,String>(){
+    			public String call(final Id_PolygonPoints onePolygon){    				    				
     				final List<Id_Point> inputBPoints= input1Broadcast.getValue();    				      			
     				String result="";
     			     		 
@@ -92,14 +92,14 @@ public class Join implements Serializable
     			     }
     				 if(result.equals(""))
     					 result = "NULL";
-    				 return new Tuple2<Long,String>(Long.parseLong(onePolygon.id),result);    				
+    				 return onePolygon.id+","+result;    				
     			}
     		}); 
     		
        		
        		//need to remove existing in output file location.
-       		JavaPairRDD<Long,String> outputSorted=output.sortByKey();
-       		outputSorted.saveAsTextFile("/home/system/Desktop/joinOut.txt");
+       		
+       		output.saveAsTextFile("/home/system/Desktop/joinOut.txt"); //args[2]
     	}		
     	else if(inputType.equals("rectangle")){
     	
@@ -117,14 +117,14 @@ public class Join implements Serializable
     		final Broadcast<List<Id_Polygon>> input1Broadcast = sc.broadcast(input1Polygons.collect());
    		     
 		    	    		 				
-    		JavaPairRDD<Long,String> output = input2Polygons.mapToPair(new PairFunction<Id_Polygon,Long,String>(){
-    			public Tuple2<Long,String> call(final Id_Polygon onePolygon){    				    				
+    		JavaRDD<String> output = input2Polygons.map(new Function<Id_Polygon,String>(){
+    			public String call(final Id_Polygon onePolygon){    				    				
     				final List<Id_Polygon> inputBPolygons= input1Broadcast.getValue();    				      			
     				String result="";
     			     		 
     			     
     			     for(int i=0; i<inputBPolygons.size(); i++){
-    			    	 if(inputBPolygons.get(i).g.contains(onePolygon.g)){
+    			    	 if(inputBPolygons.get(i).g.intersects(onePolygon.g)){ //contains
     			    		 if(result.equals(""))
     			    		 result = result + inputBPolygons.get(i).id;
     			    		 else
@@ -133,17 +133,15 @@ public class Join implements Serializable
     			     }
     				 if(result.equals(""))
     					 result = "NULL";
-    				 return new Tuple2<Long,String>(Long.parseLong(onePolygon.id),result);    				
+    				 return onePolygon.id+","+result;    				
     			}
     		}); 
     		
        		
        		//need to remove existing in output file location.
        		
-       		
-       		JavaPairRDD<Long,String> outputSorted=output.sortByKey();
- 
-       		outputSorted.saveAsTextFile("/home/system/Desktop/joinOut.txt");
+      
+       		output.saveAsTextFile("/home/system/Desktop/joinOut.txt");//args[2]
        		
     		
     	}
