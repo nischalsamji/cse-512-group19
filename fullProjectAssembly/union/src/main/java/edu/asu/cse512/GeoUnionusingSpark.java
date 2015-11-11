@@ -6,8 +6,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+
+import org.apache.commons.beanutils.BeanComparator;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
@@ -33,7 +36,7 @@ public class GeoUnionusingSpark implements java.io.Serializable{
 		int i=0;
 		final HashMap<Integer,Geometry> mappy=new HashMap();
 		/* referred from Learning Spark-Lightening-Fast-Big-Data-Analysis */
-		SparkConf conf = new SparkConf().setAppName("Grp19-GeometricUnion");
+		SparkConf conf = new SparkConf().setMaster("local").setAppName("Grp19-GeometricUnion");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		//BufferedReader bufferedreader = null;
 		//Polygon Rect=new Polygon();
@@ -69,14 +72,24 @@ public class GeoUnionusingSpark implements java.io.Serializable{
 
 	}
 	public static ArrayList<String> done(Geometry g){
-			HashMap<Double,Double> mappy=new HashMap<Double, Double>();
+		ArrayList<gunionresult> gtosort=new ArrayList<gunionresult>();
+			double x=0;
+			double y = 0;
 			Coordinate[] getcoord = g.getCoordinates();
 			ArrayList<String> array = new ArrayList<String>();
 			for (int i = 0; i < getcoord.length - 1; i++) {
 				Coordinate coo = getcoord[i];
-				array.add(coo.x + "," + coo.y);}
-			Collections.sort(array);
-			return array;
+				gunionresult p=new gunionresult( x,  y);
+					p.setX(coo.x);
+					p.setY(coo.y);
+					gtosort.add(p);}
+				Collections.sort(gtosort,new Comparator<gunionresult>(){
+				public int compare(gunionresult o1, gunionresult o2) {
+					return Double.compare(o1.getX(),o2.getX());
+				}});
+				for(gunionresult g1:gtosort){
+				array.add(g1.getX()+","+g1.getY());}
+				return array;
 		}
 	public  static Geometry calculatePoly(String lines){
 			String coordinate[]= lines.split("\t");
