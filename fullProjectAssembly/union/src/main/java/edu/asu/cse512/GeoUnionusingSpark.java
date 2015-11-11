@@ -88,6 +88,7 @@ public class GeoUnionusingSpark implements java.io.Serializable{
 					return Double.compare(o1.getX(),o2.getX());
 				}});
 				for(gunionresult g1:gtosort){
+					System.out.println("x"+g1.getX()+"y"+g1.getY());
 				array.add(g1.getX()+","+g1.getY());}
 				return array;
 		}
