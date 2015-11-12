@@ -22,6 +22,12 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+    
+   <dependency>
+	  <groupId>com.vividsolutions</groupId>
+	  <artifactId>jts</artifactId>
+	  <version>1.8</version>
+	</dependency>
   </dependencies>
   
   <build>

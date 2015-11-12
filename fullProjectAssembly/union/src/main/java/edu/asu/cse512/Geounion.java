@@ -7,16 +7,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.spark.SparkConf;
-import org.apache.spark.api.java.JavaSparkContext;
-
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.io.ParseException;
 import com.vividsolutions.jts.io.WKTReader;
-import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;
-
-import scala.tools.nsc.util.ClassPath.JavaContext;;
+import com.vividsolutions.jts.operation.union.CascadedPolygonUnion;;
 
 public class Geounion {
 	private double x1;
@@ -26,19 +21,14 @@ public class Geounion {
 	Geometry g = null;
 	int i=0;
 	final HashMap<Integer,Geometry> mappy=new HashMap();
-	/* refered from Learning Spark-Lightening-Fast-Big-Data-Analysis */
-	SparkConf conf = new SparkConf().setMaster("local").setAppName("Grp19GeoMetricUnion");
-	JavaSparkContext sc = new JavaSparkContext(conf);
 	public void readip(){
 	BufferedReader bufferedreader = null;
-	//using spark 
-	
 	Polygon Rect = new Polygon();
 	
 	try {
 
 		String currentLine;
-		bufferedreader = new BufferedReader(new FileReader("C:\\Users\\bhara\\Desktop\\geoUnion.txt"));
+		bufferedreader = new BufferedReader(new FileReader("/home/system/Desktop/geoUnion.txt"));
 
 		while ((currentLine = bufferedreader.readLine()) != null) {
 		System.out.println(currentLine);

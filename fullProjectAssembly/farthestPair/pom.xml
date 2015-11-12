@@ -31,6 +31,12 @@
 		</plugins>
 	</build>
   <dependencies>
+  <dependency>
+	  <groupId>com.vividsolutions</groupId>
+	  <artifactId>jts</artifactId>
+	  <version>1.8</version>
+	</dependency>
+  
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>

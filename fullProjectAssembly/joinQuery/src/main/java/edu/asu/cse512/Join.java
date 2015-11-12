@@ -26,7 +26,7 @@ public class Join implements Serializable
 
 
 
-	/*
+	/*1
 	 * Main function, take two parameter as input, output
 	 * @param inputLocation 1
 	 * @param inputLocation 2
@@ -37,15 +37,18 @@ public class Join implements Serializable
     @SuppressWarnings("serial")
 	public static void main( String[] args )
     { 
-    	String input1 = "/home/system/Desktop/TestData/JoinQueryInput3.csv";  //args[0];
-    	String input2 = "/home/system/Desktop/TestData/JoinQueryInput2.csv";  //args[1];
-    	SparkConf conf = new SparkConf().setMaster("local").setAppName("Grp19-JoinQuery");
+    	
+    	//String input1 = "/home/system/Desktop/TestData/JoinQueryInput1.csv";
+    	String input1 =args[0];
+    	//String input2 = "/home/system/Desktop/TestData/JoinQueryInput2.csv";//args[1];
+    	String input2 = args[1];
+    	SparkConf conf = new SparkConf().setMaster("local").setAppName("Group19-JoinQuery");
     	final JavaSparkContext sc = new JavaSparkContext(conf);
     	
     	JavaRDD<String> input1RDD = sc.textFile(input1);
     	JavaRDD<String> input2RDD = sc.textFile(input2);
     	   	
-     	String inputType = "point";//args[3];
+     	String inputType = args[3]; //"rectangle";
     	
     	if(inputType.equals("point")){
     		
@@ -99,7 +102,7 @@ public class Join implements Serializable
        		
        		//need to remove existing in output file location.
        		
-       		output.saveAsTextFile("/home/system/Desktop/joinOut.txt"); //args[2]
+       		output.saveAsTextFile(args[2]);
     	}		
     	else if(inputType.equals("rectangle")){
     	
@@ -140,8 +143,8 @@ public class Join implements Serializable
        		
        		//need to remove existing in output file location.
        		
-      
-       		output.saveAsTextFile("/home/system/Desktop/joinOut.txt");//args[2]
+    		output.saveAsTextFile(args[2]);
+       		//output.saveAsTextFile("/home/system/Desktop/JoinQuery.txt"); //args[2]
        		
     		
     	}

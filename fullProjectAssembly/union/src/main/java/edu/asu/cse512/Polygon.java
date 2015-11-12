@@ -1,5 +1,6 @@
 package edu.asu.cse512;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
@@ -9,7 +10,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.operation.overlay.snap.GeometrySnapper;
 import com.vividsolutions.jts.util.GeometricShapeFactory;
 
-public class Polygon {
+public class Polygon implements Serializable{
 	
 	/* create rectangle reference 
 	 * http://math.stackexchange.com/questions/506785/given-two-diagonally-opposite
@@ -29,15 +30,10 @@ public class Polygon {
 	private double   y4;
 	public List<Double>  CalcultePolygon(double x1,double y1,double x2,double y2){
 		this.x1=x1;this.x2=x2;this.y1=y1;this.y2=y2;
-		System.out.println("here");
 		xcentre=(x1+x2)/2;
-		System.out.println("xc"+xcentre);
 		ycentre=(y1+y2)/2;
-		System.out.println("yc"+ycentre);
 		xdia=(x1-x2)/2;
-		System.out.println("xd"+xdia);
 		ydia=(y1-y2)/2;
-		System.out.println("yd"+ydia);
 		x3=x2;
 		y3=y1;
 		x4=x1;
@@ -121,4 +117,3 @@ public class Polygon {
 		this.y4 = y4;
 	}
 }
-

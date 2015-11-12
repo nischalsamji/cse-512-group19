@@ -18,24 +18,24 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Coordinate;
 
-class Point
-{
-	private double x;
-	private double y;
-	public double getX() {
+class Point{
+	private Double x;
+	private Double y;
+	public Double getX() {
 		return x;
 	}
-	public void setX(double x) {
+	public void setX(Double x) {
 		this.x = x;
 	}
-	public double getY() {
+	public Double getY() {
 		return y;
 	}
-	public void setY(double y) {
+	public void setY(Double y) {
 		this.y = y;
 	}
 	
-	}
+	
+}
 class calculateConvexHull implements FlatMapFunction<Iterator<String>, Coordinate>, Serializable
 {
 	private static final long serialVersionUID = 1L;
@@ -71,7 +71,7 @@ class calculateConvexHull implements FlatMapFunction<Iterator<String>, Coordinat
 }
 
 
-public class convexHull
+public class farthestPair
 {
 	public static void main(String[] args) throws ClassNotFoundException
 	{
@@ -93,28 +93,44 @@ public class convexHull
 		JavaRDD<String> globalCoords = sc.parallelize(cList);
 		JavaRDD<Coordinate> FinalList = globalCoords.mapPartitions(new calculateConvexHull());
 		List<Coordinate> gConvexHull = FinalList.collect();
-		List<String> cgList = new ArrayList<String>();
-		for (Coordinate c : gConvexHull) {
-			StringBuffer sb = new StringBuffer();
-			sb.append(c.x);
-			sb.append(",");
-			sb.append(c.y);
-			sb.append("\n");
-			cgList.add(sb.toString());
+		Double maxDistance = 0.0;
+		List<Point> finalPoints= new ArrayList<Point>();
+		Point p1 = new Point();
+		Point p2 = new Point();
+		p1.setX(0.0);
+		p1.setY(0.0);
+		p2.setX(0.0);
+		p2.setY(0.0);
+		finalPoints.add(p1);
+		finalPoints.add(p2);
+		for(int i=0; i<gConvexHull.size(); i++){
+			for(int j = i+1; j<gConvexHull.size();j++){
+				Double x1 = gConvexHull.get(i).x;
+				Double y1 = gConvexHull.get(i).y;
+				Double x2 = gConvexHull.get(j).x;
+				Double y2 = gConvexHull.get(j).y;
+				double distance = ((x2 - x1)*(x2 - x1)) + ((y2 - y1))*((y2 - y1));
+				   if(distance > maxDistance){
+				   	maxDistance = distance;
+				   	finalPoints.get(0).setX(x1);
+				   	finalPoints.get(0).setY(y1);
+				   	finalPoints.get(1).setX(x2);
+				   	finalPoints.get(1).setY(y2);
+				   }
+			}
 		}
-		JavaRDD<String> globalConvexHull = sc.parallelize(cgList);
-		JavaRDD<Coordinate> GlobalFinalList = globalConvexHull.mapPartitions(new calculateConvexHull());
-		List<Coordinate> accConvexHull = GlobalFinalList.collect();
-		Set<Coordinate> po=new TreeSet<Coordinate>();
-		
-		for(Coordinate g:accConvexHull){
-		po.add(g);
-		}
-	List<String> finalOutput = new ArrayList();
-	for(Coordinate g:po){
-		finalOutput.add(Double.toString(g.x)+","+Double.toString(g.y));
-		}
-	JavaRDD<String> finalFile = sc.parallelize(finalOutput);
-	finalFile.coalesce(1).saveAsTextFile(args[1]);
+	
+	List<String> finalString = new ArrayList<String>();	
+	
+		String x1 = finalPoints.get(0).getX().toString();
+		String y1 = finalPoints.get(0).getY().toString();
+		String x2 = finalPoints.get(1).getX().toString();
+		String y2 = finalPoints.get(1).getY().toString();
+		String comma = ",";
+		finalString.add(x1+comma+y1);
+		finalString.add(x2+comma+y2);
+
+	JavaRDD<String> finalFile = sc.parallelize(finalString);
+	finalFile.saveAsTextFile(args[1]);
 	}
 }
