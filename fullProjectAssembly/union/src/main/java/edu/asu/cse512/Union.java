@@ -36,7 +36,7 @@ public class Union implements java.io.Serializable{
 		int i=0;
 		final HashMap<Integer,Geometry> mappy=new HashMap();
 		/* referred from Learning Spark-Lightening-Fast-Big-Data-Analysis */
-		SparkConf conf = new SparkConf().setAppName("Grp19-GeometricUnion");
+		SparkConf conf = new SparkConf().setMaster("local").setAppName("Grp19-GeometricUnion");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		//BufferedReader bufferedreader = null;
 		//Polygon Rect=new Polygon();
@@ -48,13 +48,13 @@ public class Union implements java.io.Serializable{
     		return idp;}
     	});
 		 
-		/*Geometry finalgeo= CascadedPolygonUnion.union(input1Polygons.take((int) input1Polygons.count()));
+		Geometry finalgeo= CascadedPolygonUnion.union(input1Polygons.take((int) input1Polygons.count()));
 		 ArrayList<String> op=done(finalgeo);
-		 JavaRDD<String> out=sc.parallelize(op);*/
+		 JavaRDD<String> out=sc.parallelize(op);
 		 
-		 List<Geometry> geo=input1Polygons.take((int) input1Polygons.count());
+		 //List<Geometry> geo=input1Polygons.take((int) input1Polygons.count());
 		 
-		 Geometry finalop=input1Polygons.reduce(new Function2<Geometry,Geometry,Geometry>(){
+		 /*Geometry finalop=input1Polygons.reduce(new Function2<Geometry,Geometry,Geometry>(){
 			private static final long serialVersionUID = 8741785958217170398L;
 
 			public Geometry call(Geometry a, Geometry b) throws Exception {
@@ -64,7 +64,7 @@ public class Union implements java.io.Serializable{
 			}});
 		 
 		 ArrayList<String> op=done(finalop);
-		 JavaRDD<String> out=sc.parallelize(op);
+		 JavaRDD<String> out=sc.parallelize(op);*/
 		 out.coalesce(1).saveAsTextFile(args[1]);
 
 	}
@@ -82,6 +82,9 @@ public class Union implements java.io.Serializable{
 					gtosort.add(p);}
 				Collections.sort(gtosort,new Comparator<gunionresult>(){
 				public int compare(gunionresult o1, gunionresult o2) {
+					if(o1.getX()==o2.getX())
+						return Double.compare(o1.getY(),o2.getY());
+					else
 					return Double.compare(o1.getX(),o2.getX());
 				}});
 				for(gunionresult g1:gtosort){
